@@ -1,0 +1,176 @@
+resilience4j.retry:
+     retryAspectOrder: 101
+     configs:
+          default:
+               maxAttempts: 3
+               waitDuration: 1s
+               retryExceptions:
+                    - org.springframework.web.client.ResourceAccessException
+                    - com.anseong.core.domain.client.common.exception.AuthorizationFailedException
+                    - java.io.IOException
+
+     instances:
+          certification:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.certification.exception.CertificationFailedException
+
+          convertMedia:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.convert.media.exception.ConvertMediaFailedException
+
+          location:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.location.exception.LocationLoadFailedException
+
+          messanger:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.messanger.exception.MessangerSendFailedException
+
+          notification:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.notificationn.exception.BatchImportTokenFailedException
+                    - com.anseong.core.domain.client.notificationn.exception.NotificationFailedException
+
+          payment:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.payment.exception.PaymentFailedException
+                    - com.anseong.core.domain.client.payment.exception.SchedulePaymentFailedException
+
+          schedule:
+               baseConfig: default
+               retryExceptions:
+                    - com.anseong.core.domain.client.schedule.exception.ScheduleTaskFailedException
+
+resilience4j.circuitbreaker:
+     circuitBreakerAspectOrder: 102
+     configs:
+          default:
+               slidingWindowSize: 2
+               failureRateThreshold: 50
+               waitDurationInOpenState: 60000
+               permittedNumberOfCallsInHalfOpenState: 3
+               eventConsumerBufferSize: 10
+               registerHealthIndicator: false
+
+     instances:
+          payment:
+               baseConfig: default
+
+          messanger:
+               baseConfig: default
+
+server:
+     http2:
+          enabled: true
+
+     port: 8181
+
+logging:
+     charset:
+          console: UTF-8
+
+     level:
+          com:
+               anseong: DEBUG
+          org:
+               springframework:
+                    jdbc:
+                         core:
+                              JdbcTemplate: DEBUG
+                              StatementCreatorUtils: TRACE
+                    core:
+                         LocalVariableTableParameterNameDiscoverer: error
+
+management:
+     endpoints:
+          web:
+               base-path: /check
+
+spring:
+     threads:
+          virtual:
+               enabled: true
+     h2:
+          console:
+               enabled: true
+     output:
+          ansi:
+               enabled: always
+     config:
+          activate:
+               on-profile: test
+     devtools:
+          restart:
+               enabled: true
+          livereload:
+               enabled: true
+
+     datasource:
+          master:
+               jdbc-url: jdbc:postgresql://localhost:5432/production?currentSchema=anseong_food&reWriteBatchedInserts=true&gssEncMode=disable
+               username: onair1127
+               password: snrnsk12@
+               # driver-class-name: org.postgresql.Driver
+               maximum-pool-size: 10
+               max-lifetime: 1800000
+
+          replica:
+               jdbc-url: jdbc:postgresql://localhost:5432/production?currentSchema=anseong_food&reWriteBatchedInserts=true&gssEncMode=disable
+               username: onair1127
+               password: snrnsk12@
+               # driver-class-name: org.postgresql.Driver
+               maximum-pool-size: 20
+               max-lifetime: 1800000
+
+     jpa:
+          open-in-view: false
+          hibernate:
+               ddl-auto: none
+          properties:
+               hibernate:
+                    default_schema: anseong_food
+                    enable_lazy_load_no_trans: true
+                    default_batch_fetch_size: 100
+                    # show_sql: true
+                    # format_sql: true
+                    jdbc:
+                         batch_size: 100
+                    query:
+                         in_clause_parameter_padding: true
+
+     data:
+          redis:
+               host: dummmy
+               port: 6379
+     mvc:
+          servlet:
+               load-on-startup: 1
+
+app:
+     token-secret: dummmy
+
+api:
+     iamport:
+          key: dummmy
+          secret: dummmy
+     aws:
+          arn_role: dummmy
+          arn_eventbridge: dummmy
+          arn_sqs: dummmy
+          arn_dlq: dummmy
+          arn_sqs_fallback: dummmy
+          access_key: dummmy
+          secret_key: dummmy
+     naver:
+          client_id: dummmy
+          client_secret: dummmy
+          access_key: dummmy
+          secret_key: dummmy
+          alimTalk_id: dummmy
+          sms_id: dummmy
