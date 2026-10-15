@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level--- [%15.15thread] %-40.40logger{36} : %msg%n"></property>
+     <!-- :%-3relative -->
+
+     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+          <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+               <pattern>${LOG_PATTERN}</pattern>
+               <charset>UTF-8</charset>
+          </encoder>
+     </appender>
+
+     <root level="INFO">
+          <appender-ref ref="console"/>
+     </root>
+</configuration>
