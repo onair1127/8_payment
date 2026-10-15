@@ -1,0 +1,156 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+     id 'org.graalvm.buildtools.native' version '1.1.8'
+     id 'org.hibernate.orm' version '7.4.10.Final'
+}
+
+group = 'com.anseong'
+version = '1.1.0'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+tasks.withType(JavaCompile) {
+     options.compilerArgs += ['-parameters']
+
+//     include '**/service/**'
+//     include '**/domain/**'
+}
+
+hibernate {
+     enhancement {
+          // enableDirtyTracking = false
+          enableLazyInitialization = true
+          enableExtendedEnhancement = false
+          enableAssociationManagement = true
+     }
+}
+
+graalvmNative {
+     testSupport = false
+     agent {
+          trackReflectionMetadata = true
+     }
+
+     metadataRepository {
+          enabled = true
+     }
+
+     binaries {
+          all {
+               resources.autodetect()
+          }
+          main {
+               imageName = 'food'
+               mainClass = 'com.anseong.AnseongAppApplication'
+               requiredVersion = '23.0'
+
+               buildArgs.add('-H:-CheckToolchain')
+               buildArgs.add('-H:+AllowIncompleteClasspath')
+               buildArgs.add('-H:+ReportUnsupportedElementsAtRuntime')
+               buildArgs.add('-H:+RunReachabilityHandlersConcurrently')
+               buildArgs.add('-H:IncludeResources=".*.xml|.*.conf"')
+               buildArgs.add('--initialize-at-build-time=ch.qos.logback')
+               buildArgs.add('--initialize-at-build-time=org.bouncycastle')
+               buildArgs.add('--initialize-at-build-time=org.slf4j')
+               buildArgs.add('--initialize-at-build-time=org.joda.time')
+               buildArgs.add('--initialize-at-build-time=org.apache.commons')
+               buildArgs.add('--initialize-at-build-time=com.fasterxml.jackson')
+               buildArgs.add('--enable-http')
+               buildArgs.add('--enable-https')
+               buildArgs.add('--verbose')
+          }
+     }
+}
+
+bootBuildImage {
+     environment = [
+          // BPE_APPEND_JAVA_TOOL_OPTIONS
+          "BP_NATIVE_IMAGE" : "true",
+          "BP_NATIVE_IMAGE_BUILD_ARGUMENTS" : "-H:-CheckToolchain -H:+AllowIncompleteClasspath -H:+ReportUnsupportedElementsAtRuntime --initialize-at-build-time=ch.qos.logback --initialize-at-build-time=org.slf4j --initialize-at-build-time=org.apache.commons --initialize-at-build-time=org.bouncycastle --enable-http --enable-https --verbose"
+     ]
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+     implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-validation'
+     implementation 'org.springframework.boot:spring-boot-starter-aspectj'
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+     testImplementation 'org.springframework.security:spring-security-test'
+     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+     implementation 'commons-io:commons-io:2.6'
+     implementation 'org.apache.commons:commons-lang3:3.9'
+     implementation 'org.apache.commons:commons-text:1.8'
+     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+     // JSON.simple & JSON in Java
+     implementation 'org.json:json:20200518'
+
+     // jakarta.json
+     implementation 'jakarta.json:jakarta.json-api:2.1.2'
+     implementation 'org.glassfish:jakarta.json:2.0.1:module'
+
+     // Jsoup HTML Parser
+     implementation 'org.jsoup:jsoup:1.13.1'
+
+     // JWT
+     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+     // AWS SDK for Java
+     implementation platform('software.amazon.awssdk:bom:2.29.35')
+     implementation 'software.amazon.awssdk:lambda'
+     implementation 'software.amazon.awssdk:scheduler'
+     implementation 'software.amazon.awssdk:netty-nio-client'
+
+
+	runtimeOnly 'org.postgresql:postgresql'
+     testRuntimeOnly 'com.h2database:h2'
+     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+     // QueryDSL
+     implementation 'io.github.openfeign.querydsl:querydsl-jpa:7.4.0'
+
+     // Resilence4j
+     implementation 'io.github.resilience4j:resilience4j-spring-boot4:2.4.0'
+
+     annotationProcessor 'io.github.openfeign.querydsl:querydsl-apt:7.4.0:jakarta'
+     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+}
+
+// 3. Q클래스(Generated) 생성 경로 설정
+def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+sourceSets {
+    main.java.srcDirs += querydslDir
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
+}
+
+clean {
+    delete file(querydslDir)
+}
+
+test {
+	useJUnitPlatform()
+     failOnNoDiscoveredTests = false
+}
